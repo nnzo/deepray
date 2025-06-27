@@ -1,20 +1,21 @@
 {
   "schemaVersion": 1,
-  "id": "addon-template",
+  "id": "deepray",
   "version": "${version}",
-  "name": "Addon Template",
-  "description": "An addon template for Meteor Client addons.",
+  "name": "Deepray",
+  "description": "Deepslate Deepray",
   "authors": [
-    "seasnail"
+    "seasnail",
+    "nnzo"
   ],
   "contact": {
-    "sources": "https://github.com/MeteorDevelopment/meteor-addon-template"
+    "sources": "https://github.com/nnzo/deepray"
   },
   "icon": "assets/template/icon.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [
-      "com.example.addon.AddonTemplate"
+      "com.nnzo.addon.AddonTemplate"
     ]
   },
   "mixins": [

@@ -1,8 +1,8 @@
-package com.example.addon;
+package com.nnzo.addon;
 
-import com.example.addon.commands.CommandExample;
-import com.example.addon.hud.HudExample;
-import com.example.addon.modules.ModuleExample;
+import com.nnzo.addon.commands.CommandExample;
+import com.nnzo.addon.hud.HudExample;
+import com.nnzo.addon.modules.ModuleExample;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 
 public class AddonTemplate extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
-    public static final Category CATEGORY = new Category("Example");
-    public static final HudGroup HUD_GROUP = new HudGroup("Example");
+    public static final Category CATEGORY = new Category("Deepray");
+    public static final HudGroup HUD_GROUP = new HudGroup("Deepray");
 
     @Override
     public void onInitialize() {
