@@ -20,6 +20,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -84,8 +86,24 @@ public class DeepslateDetect extends Module {
     }
 
     /**
-     * Pulled-out chunk scan that your onChunkData already does.
+     * Fired when we first join a world (or when we respawn into a new
+     * dimension). Clear out all old positions and re-bootstrap the scan exactly
+     * as if the user had toggled the module off/on.
      */
+    @EventHandler
+    private void onWorldChange(PacketEvent.Receive event) {
+        if (!(event.packet instanceof GameJoinS2CPacket
+                || event.packet instanceof PlayerRespawnS2CPacket)) {
+            return;
+        }
+
+        // clear stale entries
+        invalidBlocks.clear();
+
+        // re-run your onActivate logic to scan all currently loaded chunks
+        onActivate();
+    }
+
     private void scanChunk(int cx, int cz) {
         int startX = cx << 4;
         int startZ = cz << 4;
