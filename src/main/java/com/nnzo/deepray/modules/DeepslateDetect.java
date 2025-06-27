@@ -14,7 +14,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 
-public class ModuleExample extends Module {
+public class DeepslateDetect extends Module {
     private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
     private final SettingGroup sgRender = this.settings.createGroup("Render");
 
@@ -42,8 +42,8 @@ public class ModuleExample extends Module {
     /**
      * The {@code name} parameter should be in kebab-case.
      */
-    public ModuleExample() {
-        super(Deepray.CATEGORY, "world-origin", "An example module that highlights the center of the world.");
+    public DeepslateDetect() {
+        super(Deepray.CATEGORY, "deepslate-detect", "Detect mis-orientated deepslate blocks");
     }
 
     /**

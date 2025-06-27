@@ -1,8 +1,6 @@
 package com.nnzo.deepray;
 
-import com.nnzo.deepray.commands.CommandExample;
-import com.nnzo.deepray.hud.HudExample;
-import com.nnzo.deepray.modules.ModuleExample;
+import com.nnzo.deepray.modules.DeepslateDetect;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -23,7 +21,7 @@ public class Deepray extends MeteorAddon {
         LOG.info("Initializing Deepray");
 
         // Modules
-        Modules.get().add(new ModuleExample());
+        Modules.get().add(new DeepslateDetect());
 
         // Commands
         Commands.add(new CommandExample());
