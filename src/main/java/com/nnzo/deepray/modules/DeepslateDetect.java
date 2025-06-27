@@ -1,13 +1,13 @@
 package com.nnzo.deepray.modules;
 
 import com.nnzo.deepray.Deepray;
+
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -56,7 +56,7 @@ public class DeepslateDetect extends Module {
         }
 
         BlockPos playerPos = mc.player.getBlockPos();
-        int renderDistance = mc.options.getViewDistance().get() * 16; // 1 chunk = 16 blocks
+        int renderDistance = mc.options.getViewDistance().getValue() * 16; // 1 chunk = 16 blocks
 
         int radius = renderDistance;
 
