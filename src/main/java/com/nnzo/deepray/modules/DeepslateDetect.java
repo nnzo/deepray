@@ -1,108 +1,100 @@
 package com.nnzo.deepray.modules;
 
 import com.nnzo.deepray.Deepray;
-
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.EnumSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import meteordevelopment.meteorclient.settings.IntSetting;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.List;
-import meteordevelopment.meteorclient.events.world.TickEvent;
+import java.util.Set;
 
 public class DeepslateDetect extends Module {
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgRender  = settings.createGroup("Render");
 
-    private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
-    private final SettingGroup sgRender = this.settings.createGroup("Render");
-
-    private final List<BlockPos> invalidBlocks = new ObjectArrayList<>();
-    private int tickTimer = 0;
-
-    /**
-     * Example setting. The {@code name} parameter should be in kebab-case. If
-     * you want to access the setting from another class, simply make the
-     * setting {@code public}, and use
-     * {@link meteordevelopment.meteorclient.systems.modules.Modules#get(Class)}
-     * to access the {@link Module} object.
-     */
-    private final Setting<Direction.Axis> expectedAxis = sgGeneral.add(new EnumSetting.Builder<Direction.Axis>()
-            .name("expected-orientation")
-            .description("The orientation that is considered correct.")
+    private final Setting<Direction.Axis> expectedAxis = sgGeneral.add(
+        new EnumSetting.Builder<Direction.Axis>()
+            .name("expected-axis")
+            .description("Which axis (X/Y/Z) is correct for deepslate.")
             .defaultValue(Direction.Axis.X)
             .build()
     );
 
-    private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
+    private final Setting<SettingColor> color = sgRender.add(
+        new ColorSetting.Builder()
             .name("color")
-            .description("The color of the marker.")
+            .description("Highlight color.")
             .defaultValue(Color.MAGENTA)
             .build()
     );
 
-    private final Setting<Integer> tickInterval = sgRender.add(
-    new IntSetting.Builder()
-        .name("tick-interval")                    // kebab-case name
-        .description("Amount of ticks before re-checking")  // tooltip
-        .defaultValue(10)                        // initial value
-        .min(0)                                  // absolute min
-        .max(1000)                                // absolute max
-        .sliderRange(0, 100)                     // (optional) GUI slider bounds
-        .build()
-);
+    // all currently “invalid” deepslate positions
+    private final Set<BlockPos> invalidBlocks = new ObjectOpenHashSet<>();
 
-    /**
-     * The {@code name} parameter should be in kebab-case.
-     */
     public DeepslateDetect() {
-        super(Deepray.CATEGORY, "deepslate-detect", "Detect mis-orientated deepslate blocks");
+        super(Deepray.CATEGORY, "deepslate-detect", "Detect mis-oriented raw deepslate on chunk load or block update.");
     }
 
+    /** When a full chunk arrives, scan it once. */
     @EventHandler
-    private void onTick(TickEvent.Post event) {
-        if (mc.world == null || mc.player == null) {
-            return;
-        }
+    private void onChunkData(PacketEvent.Receive event) {
+        if (!(event.packet instanceof ChunkDataS2CPacket pkt) || mc.world == null) return;
 
-        if (++tickTimer >= tickInterval.get()) {
-            tickTimer = 0;
-            invalidBlocks.clear();
+        int cx = pkt.getX(), cz = pkt.getZ();
+        int startX = cx << 4, startZ = cz << 4;
+        int bottomY = mc.world.getBottomY(), topY = mc.world.getHeight();
 
-            BlockPos playerPos = mc.player.getBlockPos();
-            int radius = mc.options.getViewDistance().getValue() * 16;
+        // clear out any old entries in this chunk
+        invalidBlocks.removeIf(pos -> (pos.getX() >> 4) == cx && (pos.getZ() >> 4) == cz);
 
-            for (int x = -radius; x <= radius; x++) {
-                for (int y = -radius; y <= radius; y++) {
-                    for (int z = -radius; z <= radius; z++) {
-                        BlockPos pos = playerPos.add(x, y, z);
-                        if (!mc.world.isChunkLoaded(pos)) {
-                            continue;
-                        }
-
-                        var state = mc.world.getBlockState(pos);
-                        if (state.getBlock() == net.minecraft.block.Blocks.DEEPSLATE
-                                && state.contains(net.minecraft.state.property.Properties.AXIS)) {
-                            var axis = state.get(net.minecraft.state.property.Properties.AXIS);
-                            if (axis != expectedAxis.get()) {
-                                invalidBlocks.add(pos.toImmutable());
-                            }
-                        }
-                    }
+        for (int dx = 0; dx < 16; dx++) {
+            for (int dz = 0; dz < 16; dz++) {
+                for (int y = bottomY; y < topY; y++) {
+                    checkPos(new BlockPos(startX + dx, y, startZ + dz));
                 }
             }
         }
     }
 
+    /** When a single block changes, update that one position. */
+    @EventHandler
+    private void onBlockUpdate(PacketEvent.Receive event) {
+        if (!(event.packet instanceof BlockUpdateS2CPacket pkt)) return;
+        checkPos(pkt.getPos());
+    }
+
+    /**
+     * Add the pos to invalidBlocks if it's deepslate + wrong axis,
+     * otherwise remove it if it was previously marked.
+     */
+    private void checkPos(BlockPos pos) {
+        if (mc.world == null) return;
+        BlockState state = mc.world.getBlockState(pos);
+
+        if (state.getBlock() == Blocks.DEEPSLATE && state.contains(Properties.AXIS)) {
+            if (state.get(Properties.AXIS) != expectedAxis.get()) {
+                invalidBlocks.add(pos.toImmutable());
+                return;
+            }
+        }
+
+        invalidBlocks.remove(pos);
+    }
+
+    /** Draw a box around every bad block each render pass. */
     @EventHandler
     private void onRender3d(Render3DEvent event) {
         for (BlockPos pos : invalidBlocks) {
@@ -110,5 +102,4 @@ public class DeepslateDetect extends Module {
             event.renderer.box(box, color.get(), color.get(), ShapeMode.Both, 0);
         }
     }
-
 }
