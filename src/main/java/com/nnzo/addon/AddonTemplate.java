@@ -1,4 +1,4 @@
-package com.nnzo.addon;
+package com.nnzo.deepray;
 
 import com.nnzo.addon.commands.CommandExample;
 import com.nnzo.addon.hud.HudExample;
@@ -13,14 +13,14 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
 
-public class AddonTemplate extends MeteorAddon {
+public class Deepray extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
     public static final Category CATEGORY = new Category("Deepray");
     public static final HudGroup HUD_GROUP = new HudGroup("Deepray");
 
     @Override
     public void onInitialize() {
-        LOG.info("Initializing Meteor Addon Template");
+        LOG.info("Initializing Deepray");
 
         // Modules
         Modules.get().add(new ModuleExample());
@@ -39,7 +39,7 @@ public class AddonTemplate extends MeteorAddon {
 
     @Override
     public String getPackage() {
-        return "com.example.addon";
+        return "com.nnzo.addon";
     }
 
     @Override
