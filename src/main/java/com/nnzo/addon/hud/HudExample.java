@@ -1,6 +1,6 @@
-package com.nnzo.addon.hud;
+package com.nnzo.deepray.hud;
 
-import com.nnzo.addon.Deepray;
+import com.nnzo.deepray.Deepray;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;

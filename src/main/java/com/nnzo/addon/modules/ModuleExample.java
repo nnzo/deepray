@@ -1,6 +1,6 @@
-package com.nnzo.addon.modules;
+package com.nnzo.deepray.modules;
 
-import com.nnzo.addon.Deepray;
+import com.nnzo.Deepray;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.ColorSetting;

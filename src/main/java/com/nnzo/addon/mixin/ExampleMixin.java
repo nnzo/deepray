@@ -1,6 +1,6 @@
-package com.nnzo.addon.mixin;
+package com.nnzo.deepray.mixin;
 
-import com.nnzo.addon.Deepray;
+import com.nnzo.deepray.Deepray;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.RunArgs;
 import org.spongepowered.asm.mixin.Mixin;

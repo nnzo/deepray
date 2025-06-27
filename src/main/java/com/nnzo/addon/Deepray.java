@@ -1,8 +1,8 @@
 package com.nnzo.deepray;
 
-import com.nnzo.addon.commands.CommandExample;
-import com.nnzo.addon.hud.HudExample;
-import com.nnzo.addon.modules.ModuleExample;
+import com.nnzo.deepray.commands.CommandExample;
+import com.nnzo.deepray.hud.HudExample;
+import com.nnzo.deepray.modules.ModuleExample;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;

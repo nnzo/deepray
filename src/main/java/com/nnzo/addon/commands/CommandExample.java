@@ -1,4 +1,4 @@
-package com.nnzo.addon.commands;
+package com.nnzo.deepray.commands;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
