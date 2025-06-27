@@ -1,15 +1,15 @@
 package com.nnzo.deepray;
 
-import com.nnzo.deepray.modules.DeepslateDetect;
+import org.slf4j.Logger;
+
 import com.mojang.logging.LogUtils;
+import com.nnzo.deepray.modules.DeepslateDetect;
+
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
-import meteordevelopment.meteorclient.commands.Commands;
-import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import org.slf4j.Logger;
 
 public class Deepray extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
@@ -37,7 +37,7 @@ public class Deepray extends MeteorAddon {
 
     @Override
     public String getPackage() {
-        return "com.nnzo.addon";
+        return "com.nnzo.deepray";
     }
 
     @Override
