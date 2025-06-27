@@ -15,7 +15,7 @@
   "environment": "client",
   "entrypoints": {
     "meteor": [
-      "com.nnzo.addon.AddonTemplate"
+      "com.nnzo.deepray.Deepray"
     ]
   },
   "mixins": [],
