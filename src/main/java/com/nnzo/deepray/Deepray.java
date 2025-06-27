@@ -24,10 +24,10 @@ public class Deepray extends MeteorAddon {
         Modules.get().add(new DeepslateDetect());
 
         // Commands
-        Commands.add(new CommandExample());
+        // Commands.add(new CommandExample());
 
         // HUD
-        Hud.get().register(HudExample.INFO);
+        // Hud.get().register(HudExample.INFO);
     }
 
     @Override
