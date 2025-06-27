@@ -74,7 +74,7 @@ public class DeepslateDetect extends Module {
             return;
         }
 
-        if (++tickTimer >= tickInterval) {
+        if (++tickTimer >= tickInterval.get()) {
             tickTimer = 0;
             invalidBlocks.clear();
 
