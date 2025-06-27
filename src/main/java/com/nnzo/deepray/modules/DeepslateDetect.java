@@ -12,14 +12,11 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
-import meteordevelopment.meteorclient.events.world.GameJoinedEvent;
-import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.BlockPos;
