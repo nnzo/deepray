@@ -16,10 +16,18 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.List;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+
 public class DeepslateDetect extends Module {
 
     private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
     private final SettingGroup sgRender = this.settings.createGroup("Render");
+
+    private final List<BlockPos> invalidBlocks = new ObjectArrayList<>();
+    private int tickTimer = 0;
+    private final int TICK_INTERVAL = 10; // adjust for performance vs responsiveness
 
     /**
      * Example setting. The {@code name} parameter should be in kebab-case. If
@@ -50,33 +58,45 @@ public class DeepslateDetect extends Module {
     }
 
     @EventHandler
-    private void onRender3d(Render3DEvent event) {
+    private void onTick(TickEvent.Post event) {
         if (mc.world == null || mc.player == null) {
             return;
         }
 
-        BlockPos playerPos = mc.player.getBlockPos();
-        int renderDistance = mc.options.getViewDistance().getValue() * 16; // 1 chunk = 16 blocks
+        if (++tickTimer >= TICK_INTERVAL) {
+            tickTimer = 0;
+            invalidBlocks.clear();
 
-        int radius = renderDistance;
+            BlockPos playerPos = mc.player.getBlockPos();
+            int radius = mc.options.getViewDistance().getValue() * 16;
 
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -radius; y <= radius; y++) {
-                for (int z = -radius; z <= radius; z++) {
-                    BlockPos pos = playerPos.add(x, y, z);
-                    var state = mc.world.getBlockState(pos);
+            for (int x = -radius; x <= radius; x++) {
+                for (int y = -radius; y <= radius; y++) {
+                    for (int z = -radius; z <= radius; z++) {
+                        BlockPos pos = playerPos.add(x, y, z);
+                        if (!mc.world.isChunkLoaded(pos)) {
+                            continue;
+                        }
 
-                    if (state.getBlock() == net.minecraft.block.Blocks.DEEPSLATE) {
-                        if (state.contains(net.minecraft.state.property.Properties.AXIS)) {
+                        var state = mc.world.getBlockState(pos);
+                        if (state.getBlock() == net.minecraft.block.Blocks.DEEPSLATE
+                                && state.contains(net.minecraft.state.property.Properties.AXIS)) {
                             var axis = state.get(net.minecraft.state.property.Properties.AXIS);
                             if (axis != expectedAxis.get()) {
-                                Box box = new Box(pos);
-                                event.renderer.box(box, color.get(), color.get(), ShapeMode.Both, 0);
+                                invalidBlocks.add(pos.toImmutable());
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    @EventHandler
+    private void onRender3d(Render3DEvent event) {
+        for (BlockPos pos : invalidBlocks) {
+            Box box = new Box(pos);
+            event.renderer.box(box, color.get(), color.get(), ShapeMode.Both, 0);
         }
     }
 
