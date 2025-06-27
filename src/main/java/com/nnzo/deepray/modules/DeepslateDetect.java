@@ -18,7 +18,13 @@ import net.minecraft.util.math.Direction;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
-import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.events.world.GameJoinedEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.BlockPos;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 
 public class DeepslateDetect extends Module {
 
@@ -58,37 +64,38 @@ public class DeepslateDetect extends Module {
     }
 
     @EventHandler
-    private void onTick(TickEvent.Post event) {
-        if (mc.world == null || mc.player == null) {
+    private void onChunkLoad(PacketEvent.Receive event) {
+        if (!(event.packet instanceof ChunkDataS2CPacket packet) || mc.world == null) {
             return;
         }
 
-        if (++tickTimer >= TICK_INTERVAL) {
-            tickTimer = 0;
-            invalidBlocks.clear();
+        ChunkPos chunkPos = new ChunkPos(packet.getChunkX(), packet.getChunkZ()); // ✅ use getters
 
-            BlockPos playerPos = mc.player.getBlockPos();
-            int radius = mc.options.getViewDistance().getValue() * 16;
+        int startX = chunkPos.getStartX();
+        int startZ = chunkPos.getStartZ();
 
-            for (int x = -radius; x <= radius; x++) {
-                for (int y = -radius; y <= radius; y++) {
-                    for (int z = -radius; z <= radius; z++) {
-                        BlockPos pos = playerPos.add(x, y, z);
-                        if (!mc.world.isChunkLoaded(pos)) {
-                            continue;
-                        }
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < mc.world.getHeight(); y++) {
+                for (int z = 0; z < 16; z++) {
+                    BlockPos pos = new BlockPos(startX + x, y, startZ + z);
+                    var state = mc.world.getBlockState(pos);
 
-                        var state = mc.world.getBlockState(pos);
-                        if (state.getBlock() == net.minecraft.block.Blocks.DEEPSLATE
-                                && state.contains(net.minecraft.state.property.Properties.AXIS)) {
-                            var axis = state.get(net.minecraft.state.property.Properties.AXIS);
-                            if (axis != expectedAxis.get()) {
-                                invalidBlocks.add(pos.toImmutable());
-                            }
+                    if (state.getBlock() == net.minecraft.block.Blocks.DEEPSLATE
+                            && state.contains(net.minecraft.state.property.Properties.AXIS)) {
+                        var axis = state.get(net.minecraft.state.property.Properties.AXIS);
+                        if (axis != expectedAxis.get()) {
+                            invalidBlocks.add(pos.toImmutable());
                         }
                     }
                 }
             }
+        }
+    }
+
+    @EventHandler
+    private void onGameJoin(PacketEvent.Receive event) {
+        if (event.packet instanceof GameJoinS2CPacket) {
+            invalidBlocks.clear();
         }
     }
 
