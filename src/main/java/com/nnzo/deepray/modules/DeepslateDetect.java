@@ -7,36 +7,39 @@ import meteordevelopment.meteorclient.settings.ColorSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 
 public class DeepslateDetect extends Module {
+
     private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
     private final SettingGroup sgRender = this.settings.createGroup("Render");
 
     /**
-     * Example setting.
-     * The {@code name} parameter should be in kebab-case.
-     * If you want to access the setting from another class, simply make the setting {@code public}, and use
-     * {@link meteordevelopment.meteorclient.systems.modules.Modules#get(Class)} to access the {@link Module} object.
+     * Example setting. The {@code name} parameter should be in kebab-case. If
+     * you want to access the setting from another class, simply make the
+     * setting {@code public}, and use
+     * {@link meteordevelopment.meteorclient.systems.modules.Modules#get(Class)}
+     * to access the {@link Module} object.
      */
-    private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
-        .name("scale")
-        .description("The size of the marker.")
-        .defaultValue(2.0d)
-        .range(0.5d, 10.0d)
-        .build()
+    private final Setting<Direction.Axis> expectedAxis = sgGeneral.add(new EnumSetting.Builder<Direction.Axis>()
+            .name("expected-orientation")
+            .description("The orientation that is considered correct.")
+            .defaultValue(Direction.Axis.X)
+            .build()
     );
 
     private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
-        .name("color")
-        .description("The color of the marker.")
-        .defaultValue(Color.MAGENTA)
-        .build()
+            .name("color")
+            .description("The color of the marker.")
+            .defaultValue(Color.MAGENTA)
+            .build()
     );
 
     /**
@@ -46,21 +49,35 @@ public class DeepslateDetect extends Module {
         super(Deepray.CATEGORY, "deepslate-detect", "Detect mis-orientated deepslate blocks");
     }
 
-    /**
-     * Example event handling method.
-     * Requires {@link Deepray#getPackage()} to be setup correctly, otherwise the game will crash whenever the module is enabled.
-     */
     @EventHandler
     private void onRender3d(Render3DEvent event) {
-        // Create & stretch the marker object
-        Box marker = new Box(BlockPos.ORIGIN);
-        marker = marker.stretch(
-            scale.get() * marker.getLengthX(),
-            scale.get() * marker.getLengthY(),
-            scale.get() * marker.getLengthZ()
-        );
+        if (mc.world == null || mc.player == null) {
+            return;
+        }
 
-        // Render the marker based on the color setting
-        event.renderer.box(marker, color.get(), color.get(), ShapeMode.Both, 0);
+        BlockPos playerPos = mc.player.getBlockPos();
+        int renderDistance = mc.options.getViewDistance().get() * 16; // 1 chunk = 16 blocks
+
+        int radius = renderDistance;
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    BlockPos pos = playerPos.add(x, y, z);
+                    var state = mc.world.getBlockState(pos);
+
+                    if (state.getBlock() == net.minecraft.block.Blocks.DEEPSLATE) {
+                        if (state.contains(net.minecraft.state.property.Properties.AXIS)) {
+                            var axis = state.get(net.minecraft.state.property.Properties.AXIS);
+                            if (axis != expectedAxis.get()) {
+                                Box box = new Box(pos);
+                                event.renderer.box(box, color.get(), color.get(), ShapeMode.Both, 0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
+
 }
