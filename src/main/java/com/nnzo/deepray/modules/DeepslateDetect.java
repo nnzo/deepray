@@ -24,6 +24,8 @@ import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
 
 public class DeepslateDetect extends Module {
 
@@ -53,6 +55,52 @@ public class DeepslateDetect extends Module {
         super(Deepray.CATEGORY, "deepslate-detect", "Detect mis-oriented raw deepslate on chunk load or block update.");
     }
 
+    @Override
+    public void onActivate() {
+        super.onActivate();
+        invalidBlocks.clear();
+        if (mc.world == null || mc.player == null) {
+            return;
+        }
+
+        int viewDistance = mc.options.getViewDistance().getValue();
+        // player’s current chunk coords
+        int centerCx = mc.player.getBlockPos().getX() >> 4;
+        int centerCz = mc.player.getBlockPos().getZ() >> 4;
+
+        for (int dx = -viewDistance; dx <= viewDistance; dx++) {
+            for (int dz = -viewDistance; dz <= viewDistance; dz++) {
+                int cx = centerCx + dx;
+                int cz = centerCz + dz;
+
+                // ask the world: is there a FULL (i.e. fully-loaded) chunk here?
+                Chunk chunk = mc.world.getChunk(cx, cz, ChunkStatus.FULL, false);
+                if (chunk == null) {
+                    continue;  // not loaded, skip
+                }
+                scanChunk(cx, cz);
+            }
+        }
+    }
+
+    /**
+     * Pulled-out chunk scan that your onChunkData already does.
+     */
+    private void scanChunk(int cx, int cz) {
+        int startX = cx << 4;
+        int startZ = cz << 4;
+        int bottomY = mc.world.getBottomY();
+        int topY = mc.world.getHeight();
+
+        for (int dx = 0; dx < 16; dx++) {
+            for (int dz = 0; dz < 16; dz++) {
+                for (int y = bottomY; y < topY; y++) {
+                    checkPos(new BlockPos(startX + dx, y, startZ + dz));
+                }
+            }
+        }
+    }
+
     /**
      * When a full chunk arrives, scan it once.
      */
@@ -65,21 +113,7 @@ public class DeepslateDetect extends Module {
         // ← use getChunkX() / getChunkZ() here
         int cx = pkt.getChunkX();
         int cz = pkt.getChunkZ();
-        int startX = cx << 4;
-        int startZ = cz << 4;
-        int bottomY = mc.world.getBottomY();
-        int topY = mc.world.getHeight();
-
-        // remove any old entries in this chunk
-        invalidBlocks.removeIf(pos -> (pos.getX() >> 4) == cx && (pos.getZ() >> 4) == cz);
-
-        for (int dx = 0; dx < 16; dx++) {
-            for (int dz = 0; dz < 16; dz++) {
-                for (int y = bottomY; y < topY; y++) {
-                    checkPos(new BlockPos(startX + dx, y, startZ + dz));
-                }
-            }
-        }
+        scanChunk(cx, cz);
     }
 
     /**
